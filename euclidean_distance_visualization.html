@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>欧氏距离可视化详解</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #e74c3c;
+            padding-bottom: 15px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 40px;
+            border-left: 5px solid #e74c3c;
+            padding-left: 15px;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .graph-container {
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+        }
+        .explanation {
+            background: #ffe5e5;
+            padding: 15px;
+            border-left: 4px solid #e74c3c;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .formula {
+            background: #fff3cd;
+            padding: 20px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .comparison-table th, .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        .comparison-table th {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .comparison-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .step-number {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            margin-right: 10px;
+        }
+        .info-box {
+            background: #ffe5e5;
+            border: 1px solid #ffcccc;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success-box {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .math-box {
+            background: white;
+            border: 2px solid #e74c3c;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .vs-divider {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #e74c3c;
+            margin: 30px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📏 欧氏距离（Euclidean Distance）完整可视化</h1>
+
+        <div class="info-box">
+            <strong>📌 学习目标：</strong> 深入理解欧氏距离的计算原理、几何意义，以及与余弦相似度的区别。
+        </div>
+
+        <!-- Section 1: 欧氏距离的基本概念 -->
+        <h2><span class="step-number">1</span>欧氏距离的基本概念</h2>
+        <div class="section">
+            <div class="math-box">
+                <h3 style="color: #e74c3c; margin-top: 0;">数学定义</h3>
+                <div class="formula">
+                    <strong>公式：</strong><br>
+                    euclidean_distance(A, B) = √(Σ(Aᵢ - Bᵢ)²)<br><br>
+
+                    展开形式：<br>
+                    d(A, B) = √[(A₀-B₀)² + (A₁-B₁)² + (A₂-B₂)² + ... + (A₇₆₇-B₇₆₇)²]<br><br>
+
+                    对于 768 维向量：<br>
+                    d = √[Σᵢ₌₀⁷⁶⁷(Aᵢ - Bᵢ)²]
+                </div>
+            </div>
+
+            <div class="explanation">
+                <strong>几何意义：</strong>
+                <ul>
+                    <li>欧氏距离是向量在空间中的<span class="highlight">直线距离</span></li>
+                    <li>类似于我们在地图上测量两点之间的直线距离</li>
+                    <li>距离越小，两个向量越相似</li>
+                    <li>值域：[0, ∞)，其中 0 表示两个向量完全相同</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 2: 2D 空间中的欧氏距离 -->
+        <h2><span class="step-number">2</span>2D 空间直观理解</h2>
+        <div class="section">
+            <div class="explanation">
+                <strong>说明：</strong>在二维平面上，欧氏距离就是两点之间的直线距离（勾股定理）
+            </div>
+            <div class="graph-container" id="plot2d"></div>
+            <div class="math-box">
+                <h3 style="color: #e74c3c; margin-top: 0;">2D 示例计算</h3>
+                <div class="formula">
+                    点 A = (0.8, 0.6)  "如何学习 Java 编程"<br>
+                    点 B = (0.85, 0.53)  "Java 入门教程"<br>
+                    点 C = (0.1, 0.99)  "今天天气真好"<br><br>
+
+                    d(A, B) = √[(0.85-0.8)² + (0.53-0.6)²]<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= √[0.05² + (-0.07)²]<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= √[0.0025 + 0.0049]<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= √0.0074<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;≈ <span class="highlight">0.086</span> (距离近，相似度高)<br><br>
+
+                    d(A, C) = √[(0.1-0.8)² + (0.99-0.6)²]<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= √[(-0.7)² + 0.39²]<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= √[0.49 + 0.1521]<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= √0.6421<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;≈ <span class="highlight">0.801</span> (距离远，相似度低)
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: 3D 空间可视化 -->
+        <h2><span class="step-number">3</span>3D 空间欧氏距离</h2>
+        <div class="section">
+            <div class="explanation">
+                <strong>说明：</strong>在三维空间中，欧氏距离是两点之间的空间直线距离
+            </div>
+            <div class="graph-container" id="plot3d"></div>
+            <div class="math-box">
+                <h3 style="color: #e74c3c; margin-top: 0;">3D 示例计算</h3>
+                <div class="formula">
+                    点 A = (0.8, 0.6, 0.3)<br>
+                    点 B = (0.85, 0.53, 0.35)<br><br>
+
+                    d(A, B) = √[(0.85-0.8)² + (0.53-0.6)² + (0.35-0.3)²]<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= √[0.05² + (-0.07)² + 0.05²]<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= √[0.0025 + 0.0049 + 0.0025]<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= √0.0099<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;≈ <span class="highlight">0.099</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: 768 维向量的详细计算 -->
+        <h2><span class="step-number">4</span>768 维向量的欧氏距离计算</h2>
+        <div class="section">
+            <div class="explanation">
+                以 GTE 模型生成的 768 维向量为例，展示前 5 个维度的计算过程：
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>维度 i</th>
+                        <th>vec1[i]<br>(句子1)</th>
+                        <th>vec2[i]<br>(句子2)</th>
+                        <th>差值<br>(Aᵢ - Bᵢ)</th>
+                        <th>差值平方<br>(Aᵢ - Bᵢ)²</th>
+                    </tr>
+                </thead>
+                <tbody id="calculation-table">
+                </tbody>
+            </table>
+
+            <div class="formula">
+                <strong>完整计算（768 维）：</strong><br>
+                <div id="full-calculation"></div>
+            </div>
+        </div>
+
+        <!-- Section 5: Java 代码实现 -->
+        <h2><span class="step-number">5</span>Java 代码实现</h2>
+        <div class="section">
+            <div class="code-block">
+<pre style="margin: 0; color: #f8f8f2;">
+<span style="color: #75715e;">/**
+ * 计算欧氏距离
+ *
+ * @param vec1 向量1 (768维)
+ * @param vec2 向量2 (768维)
+ * @return 欧氏距离值 (范围: [0, ∞), 0表示完全相同)
+ */</span>
+<span style="color: #66d9ef;">public static double</span> <span style="color: #a6e22e;">euclideanDistance</span>(<span style="color: #66d9ef;">float</span>[] vec1, <span style="color: #66d9ef;">float</span>[] vec2) {
+    <span style="color: #f92672;">if</span> (vec1.length != vec2.length) {
+        <span style="color: #f92672;">throw new</span> <span style="color: #a6e22e;">IllegalArgumentException</span>(<span style="color: #e6db74;">"向量维度不匹配"</span>);
+    }
+
+    <span style="color: #66d9ef;">double</span> sumSquaredDiff = <span style="color: #ae81ff;">0.0</span>;  <span style="color: #75715e;">// 差值平方和</span>
+
+    <span style="color: #75715e;">// 遍历所有维度（768维）</span>
+    <span style="color: #f92672;">for</span> (<span style="color: #66d9ef;">int</span> i = <span style="color: #ae81ff;">0</span>; i &lt; vec1.length; i++) {
+        <span style="color: #66d9ef;">double</span> diff = vec1[i] - vec2[i];        <span style="color: #75715e;">// 计算差值</span>
+        sumSquaredDiff += diff * diff;           <span style="color: #75715e;">// 累加差值平方</span>
+    }
+
+    <span style="color: #75715e;">// 返回平方根</span>
+    <span style="color: #f92672;">return</span> Math.<span style="color: #a6e22e;">sqrt</span>(sumSquaredDiff);
+}
+
+<span style="color: #75715e;">/**
+ * 归一化欧氏距离（范围转换为 [0, 1]）
+ *
+ * @param vec1 向量1
+ * @param vec2 向量2
+ * @return 归一化后的距离 (0表示相同, 1表示最远)
+ */</span>
+<span style="color: #66d9ef;">public static double</span> <span style="color: #a6e22e;">normalizedEuclideanDistance</span>(<span style="color: #66d9ef;">float</span>[] vec1, <span style="color: #66d9ef;">float</span>[] vec2) {
+    <span style="color: #66d9ef;">double</span> distance = euclideanDistance(vec1, vec2);
+
+    <span style="color: #75715e;">// 对于单位向量，最大距离是 √2</span>
+    <span style="color: #66d9ef;">double</span> maxDistance = Math.<span style="color: #a6e22e;">sqrt</span>(<span style="color: #ae81ff;">2.0</span>);
+
+    <span style="color: #f92672;">return</span> distance / maxDistance;
+}
+
+<span style="color: #75715e;">/**
+ * 将欧氏距离转换为相似度 (范围: [0, 1])
+ *
+ * @param vec1 向量1
+ * @param vec2 向量2
+ * @return 相似度 (1表示相同, 0表示最远)
+ */</span>
+<span style="color: #66d9ef;">public static double</span> <span style="color: #a6e22e;">euclideanSimilarity</span>(<span style="color: #66d9ef;">float</span>[] vec1, <span style="color: #66d9ef;">float</span>[] vec2) {
+    <span style="color: #66d9ef;">double</span> distance = euclideanDistance(vec1, vec2);
+
+    <span style="color: #75715e;">// 使用公式: similarity = 1 / (1 + distance)</span>
+    <span style="color: #f92672;">return</span> <span style="color: #ae81ff;">1.0</span> / (<span style="color: #ae81ff;">1.0</span> + distance);
+}
+</pre>
+            </div>
+        </div>
+
+        <!-- Section 6: 距离矩阵热力图 -->
+        <h2><span class="step-number">6</span>距离矩阵热力图</h2>
+        <div class="section">
+            <div class="explanation">
+                <strong>说明：</strong>计算所有句子两两之间的欧氏距离，颜色越深距离越大（相似度越低）
+            </div>
+            <div class="graph-container" id="heatmap"></div>
+            <div class="explanation">
+                <strong>热力图解读：</strong>
+                <ul>
+                    <li>颜色越<span style="color: #4575b4; font-weight: bold;">蓝</span>，距离越小，相似度越高</li>
+                    <li>颜色越<span style="color: #d73027; font-weight: bold;">红</span>，距离越大，相似度越低</li>
+                    <li>对角线为 0.0（自己与自己的距离为0）</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 7: 欧氏距离 vs 余弦相似度 -->
+        <div class="vs-divider">⚡ 欧氏距离 VS 余弦相似度 ⚡</div>
+
+        <h2><span class="step-number">7</span>欧氏距离 vs 余弦相似度对比</h2>
+        <div class="section">
+            <div class="graph-container" id="comparison-plot"></div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>对比维度</th>
+                        <th>欧氏距离 (Euclidean Distance)</th>
+                        <th>余弦相似度 (Cosine Similarity)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>计算公式</strong></td>
+                        <td>√(Σ(Aᵢ - Bᵢ)²)</td>
+                        <td>(A · B) / (||A|| × ||B||)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>几何意义</strong></td>
+                        <td>两点之间的<span class="highlight">直线距离</span></td>
+                        <td>两向量之间的<span class="highlight">夹角</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>值域</strong></td>
+                        <td>[0, ∞)，0表示相同</td>
+                        <td>[-1, 1]，1表示相同</td>
+                    </tr>
+                    <tr>
+                        <td><strong>向量长度敏感性</strong></td>
+                        <td>❌ <strong>受向量长度影响</strong></td>
+                        <td>✅ <strong>不受向量长度影响</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>计算复杂度</strong></td>
+                        <td>O(n)，稍快</td>
+                        <td>O(n)，需要额外计算模长</td>
+                    </tr>
+                    <tr>
+                        <td><strong>适用场景</strong></td>
+                        <td>• 归一化后的向量<br>• 绝对位置重要的场景<br>• 图像特征比较</td>
+                        <td>• 文本语义检索<br>• 不关心向量长度<br>• 只关注方向</td>
+                    </tr>
+                    <tr>
+                        <td><strong>优点</strong></td>
+                        <td>• 计算简单<br>• 直观易懂<br>• 考虑绝对距离</td>
+                        <td>• 不受长度影响<br>• 适合文本检索<br>• 抗噪声能力强</td>
+                    </tr>
+                    <tr>
+                        <td><strong>缺点</strong></td>
+                        <td>• 受向量长度影响<br>• 高维空间受维度诅咒影响</td>
+                        <td>• 不考虑向量大小<br>• 计算稍复杂</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Elasticsearch 支持</strong></td>
+                        <td>✅ l2_norm</td>
+                        <td>✅ cosine (默认推荐)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 8: 关键差异演示 -->
+        <h2><span class="step-number">8</span>关键差异：向量长度的影响</h2>
+        <div class="section">
+            <div class="warning-box">
+                <strong>⚠️ 重要区别：</strong>欧氏距离会受到向量长度（模长）的影响，而余弦相似度不会。
+            </div>
+
+            <div class="graph-container" id="length-effect"></div>
+
+            <div class="math-box">
+                <h3 style="color: #e74c3c; margin-top: 0;">示例：向量长度的影响</h3>
+                <div class="formula">
+                    <strong>假设有三个向量：</strong><br>
+                    A = (3, 4)       长度 ||A|| = 5<br>
+                    B = (3.3, 4.4)   长度 ||B|| = 5.5 (与A方向相同，只是更长)<br>
+                    C = (4, 3)       长度 ||C|| = 5 (与A方向不同，但长度相同)<br><br>
+
+                    <strong style="color: #3498db;">余弦相似度：</strong><br>
+                    cos(A, B) = 1.000 (方向完全相同)<br>
+                    cos(A, C) = 0.960 (方向略有不同)<br>
+                    → 余弦相似度认为 A 和 B 最相似<br><br>
+
+                    <strong style="color: #e74c3c;">欧氏距离：</strong><br>
+                    d(A, B) = √[(3.3-3)² + (4.4-4)²] = √[0.09 + 0.16] = 0.5<br>
+                    d(A, C) = √[(4-3)² + (3-4)²] = √[1 + 1] = 1.414<br>
+                    → 欧氏距离也认为 A 和 B 更相似<br><br>
+
+                    <strong style="color: #9b59b6;">但如果 B 变成 (6, 8)（方向相同但长度加倍）：</strong><br>
+                    cos(A, (6,8)) = 1.000 (方向仍然相同！)<br>
+                    d(A, (6,8)) = √[(6-3)² + (8-4)²] = √[9 + 16] = 5.0 (距离变大！)<br>
+                    → <span class="highlight">余弦相似度不变，但欧氏距离显著增加</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 9: 归一化的重要性 -->
+        <h2><span class="step-number">9</span>为什么需要归一化？</h2>
+        <div class="section">
+            <div class="success-box">
+                <strong>✅ 最佳实践：</strong>在使用欧氏距离时，通常需要对向量进行归一化（L2 normalization）
+            </div>
+
+            <div class="graph-container" id="normalization-effect"></div>
+
+            <div class="code-block">
+<pre style="margin: 0; color: #f8f8f2;">
+<span style="color: #75715e;">/**
+ * L2 归一化（将向量归一化为单位向量）
+ *
+ * @param vec 原始向量
+ * @return 归一化后的向量（长度为1）
+ */</span>
+<span style="color: #66d9ef;">public static float</span>[] <span style="color: #a6e22e;">normalize</span>(<span style="color: #66d9ef;">float</span>[] vec) {
+    <span style="color: #75715e;">// 计算向量的模长</span>
+    <span style="color: #66d9ef;">double</span> norm = <span style="color: #ae81ff;">0.0</span>;
+    <span style="color: #f92672;">for</span> (<span style="color: #66d9ef;">float</span> v : vec) {
+        norm += v * v;
+    }
+    norm = Math.<span style="color: #a6e22e;">sqrt</span>(norm);
+
+    <span style="color: #75715e;">// 归一化</span>
+    <span style="color: #66d9ef;">float</span>[] normalized = <span style="color: #f92672;">new float</span>[vec.length];
+    <span style="color: #f92672;">for</span> (<span style="color: #66d9ef;">int</span> i = <span style="color: #ae81ff;">0</span>; i &lt; vec.length; i++) {
+        normalized[i] = (<span style="color: #66d9ef;">float</span>) (vec[i] / norm);
+    }
+
+    <span style="color: #f92672;">return</span> normalized;
+}
+
+<span style="color: #75715e;">// 使用示例</span>
+<span style="color: #66d9ef;">float</span>[] vec1 = getEmbedding(<span style="color: #e6db74;">"如何学习 Java 编程"</span>);
+<span style="color: #66d9ef;">float</span>[] vec2 = getEmbedding(<span style="color: #e6db74;">"Java 入门教程"</span>);
+
+<span style="color: #75715e;">// 归一化后再计算欧氏距离</span>
+<span style="color: #66d9ef;">float</span>[] norm1 = normalize(vec1);
+<span style="color: #66d9ef;">float</span>[] norm2 = normalize(vec2);
+<span style="color: #66d9ef;">double</span> distance = euclideanDistance(norm1, norm2);
+</pre>
+            </div>
+
+            <div class="explanation">
+                <strong>归一化后的效果：</strong>
+                <ul>
+                    <li>所有向量长度变为 1（单位向量）</li>
+                    <li>欧氏距离只反映方向差异，不受长度影响</li>
+                    <li>归一化后的欧氏距离与余弦相似度有数学关系：<br>
+                        <code>d²(A, B) = 2 - 2×cos(A, B)</code>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 10: Elasticsearch 中的使用 -->
+        <h2><span class="step-number">10</span>在 Elasticsearch 中使用欧氏距离</h2>
+        <div class="section">
+            <div class="code-block">
+<pre style="margin: 0; color: #f8f8f2;">
+<span style="color: #75715e;">// 1. 创建索引时指定 similarity 为 l2_norm</span>
+PUT /my_index
+{
+  <span style="color: #e6db74;">"mappings"</span>: {
+    <span style="color: #e6db74;">"properties"</span>: {
+      <span style="color: #e6db74;">"title_vector"</span>: {
+        <span style="color: #e6db74;">"type"</span>: <span style="color: #e6db74;">"dense_vector"</span>,
+        <span style="color: #e6db74;">"dims"</span>: <span style="color: #ae81ff;">768</span>,
+        <span style="color: #e6db74;">"index"</span>: <span style="color: #ae81ff;">true</span>,
+        <span style="color: #e6db74;">"similarity"</span>: <span style="color: #e6db74;">"l2_norm"</span>  <span style="color: #75715e;">← 使用欧氏距离</span>
+      }
+    }
+  }
+}
+
+<span style="color: #75715e;">// 2. kNN 搜索（会自动使用 l2_norm 计算距离）</span>
+POST /my_index/_search
+{
+  <span style="color: #e6db74;">"knn"</span>: {
+    <span style="color: #e6db74;">"field"</span>: <span style="color: #e6db74;">"title_vector"</span>,
+    <span style="color: #e6db74;">"query_vector"</span>: [<span style="color: #ae81ff;">0.1</span>, <span style="color: #ae81ff;">0.2</span>, ...],  <span style="color: #75715e;">// 768维向量</span>
+    <span style="color: #e6db74;">"k"</span>: <span style="color: #ae81ff;">10</span>,
+    <span style="color: #e6db74;">"num_candidates"</span>: <span style="color: #ae81ff;">100</span>
+  }
+}
+
+<span style="color: #75715e;">// 返回的 _score 是基于欧氏距离计算的相似度分数</span>
+<span style="color: #75715e;">// 分数越高，距离越小（越相似）</span>
+</pre>
+            </div>
+
+            <div class="warning-box">
+                <strong>⚠️ 注意：</strong>
+                <ul>
+                    <li>Elasticsearch 会自动将欧氏距离转换为评分（score）</li>
+                    <li>评分公式：<code>score = 1 / (1 + distance²)</code></li>
+                    <li>对于大多数文本语义检索，推荐使用 <code>cosine</code> 而不是 <code>l2_norm</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 11: 使用建议 -->
+        <h2><span class="step-number">11</span>何时使用欧氏距离？</h2>
+        <div class="section">
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>场景</th>
+                        <th>推荐度量</th>
+                        <th>原因</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>文本语义检索</td>
+                        <td><span style="color: #3498db;">✅ 余弦相似度</span></td>
+                        <td>不受文本长度影响，只关注语义方向</td>
+                    </tr>
+                    <tr>
+                        <td>图像特征匹配</td>
+                        <td><span style="color: #e74c3c;">✅ 欧氏距离</span></td>
+                        <td>归一化后的图像特征，绝对距离有意义</td>
+                    </tr>
+                    <tr>
+                        <td>推荐系统</td>
+                        <td><span style="color: #3498db;">✅ 余弦相似度</span></td>
+                        <td>用户偏好向量，关注偏好方向而非强度</td>
+                    </tr>
+                    <tr>
+                        <td>聚类分析</td>
+                        <td><span style="color: #e74c3c;">✅ 欧氏距离</span></td>
+                        <td>归一化后，可以形成球形聚类</td>
+                    </tr>
+                    <tr>
+                        <td>异常检测</td>
+                        <td><span style="color: #e74c3c;">✅ 欧氏距离</span></td>
+                        <td>绝对距离更能反映异常程度</td>
+                    </tr>
+                    <tr>
+                        <td>时间序列</td>
+                        <td><span style="color: #e74c3c;">✅ 欧氏距离</span></td>
+                        <td>DTW 或欧氏距离测量序列差异</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="success-box">
+                <strong>💡 最佳实践总结：</strong>
+                <ol>
+                    <li><strong>文本检索：</strong>优先使用余弦相似度</li>
+                    <li><strong>使用欧氏距离前：</strong>务必对向量进行 L2 归一化</li>
+                    <li><strong>归一化后：</strong>欧氏距离和余弦相似度等价</li>
+                    <li><strong>Elasticsearch：</strong>默认使用 <code>cosine</code>，除非有特殊需求</li>
+                </ol>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 1. 2D 欧氏距离可视化
+        function plot2D() {
+            const points = {
+                '如何学习 Java 编程': { x: 0.8, y: 0.6, color: '#2ecc71' },
+                'Java 入门教程': { x: 0.85, y: 0.53, color: '#3498db' },
+                '今天天气真好': { x: 0.1, y: 0.99, color: '#e74c3c' }
+            };
+
+            const traces = [];
+
+            // 绘制点
+            for (const [name, point] of Object.entries(points)) {
+                traces.push({
+                    x: [point.x],
+                    y: [point.y],
+                    mode: 'markers+text',
+                    name: name,
+                    text: [name],
+                    textposition: 'top center',
+                    marker: { size: 12, color: point.color }
+                });
+            }
+
+            // 绘制距离线
+            const p1 = points['如何学习 Java 编程'];
+            const p2 = points['Java 入门教程'];
+            const p3 = points['今天天气真好'];
+
+            // 近距离线（绿色-蓝色）
+            traces.push({
+                x: [p1.x, p2.x],
+                y: [p1.y, p2.y],
+                mode: 'lines',
+                name: 'd(A,B) = 0.086',
+                line: { color: '#27ae60', width: 3, dash: 'dash' },
+                showlegend: true
+            });
+
+            // 远距离线（绿色-红色）
+            traces.push({
+                x: [p1.x, p3.x],
+                y: [p1.y, p3.y],
+                mode: 'lines',
+                name: 'd(A,C) = 0.801',
+                line: { color: '#c0392b', width: 3, dash: 'dash' },
+                showlegend: true
+            });
+
+            const layout = {
+                title: '2D 空间中的欧氏距离（直线距离）',
+                xaxis: { title: 'X 轴', range: [-0.1, 1.1], zeroline: true },
+                yaxis: { title: 'Y 轴', range: [-0.1, 1.1], zeroline: true },
+                height: 500,
+                annotations: [
+                    {
+                        x: (p1.x + p2.x) / 2,
+                        y: (p1.y + p2.y) / 2,
+                        text: '短距离<br>(相似)',
+                        showarrow: false,
+                        font: { color: '#27ae60', size: 12 }
+                    },
+                    {
+                        x: (p1.x + p3.x) / 2,
+                        y: (p1.y + p3.y) / 2,
+                        text: '长距离<br>(不相似)',
+                        showarrow: false,
+                        font: { color: '#c0392b', size: 12 }
+                    }
+                ]
+            };
+
+            Plotly.newPlot('plot2d', traces, layout);
+        }
+
+        // 2. 3D 欧氏距离可视化
+        function plot3D() {
+            const points = {
+                '如何学习 Java 编程': { x: 0.8, y: 0.6, z: 0.3, color: '#2ecc71' },
+                'Java 入门教程': { x: 0.85, y: 0.53, z: 0.35, color: '#3498db' },
+                '今天天气真好': { x: 0.1, y: 0.99, z: -0.2, color: '#e74c3c' }
+            };
+
+            const traces = [];
+
+            // 绘制点
+            for (const [name, point] of Object.entries(points)) {
+                traces.push({
+                    x: [point.x],
+                    y: [point.y],
+                    z: [point.z],
+                    mode: 'markers+text',
+                    type: 'scatter3d',
+                    name: name,
+                    text: [name],
+                    textposition: 'top center',
+                    marker: { size: 8, color: point.color }
+                });
+            }
+
+            // 绘制距离线
+            const p1 = points['如何学习 Java 编程'];
+            const p2 = points['Java 入门教程'];
+
+            traces.push({
+                x: [p1.x, p2.x],
+                y: [p1.y, p2.y],
+                z: [p1.z, p2.z],
+                mode: 'lines',
+                type: 'scatter3d',
+                name: '欧氏距离',
+                line: { color: '#27ae60', width: 6 }
+            });
+
+            const layout = {
+                title: '3D 空间中的欧氏距离',
+                scene: {
+                    xaxis: { title: 'X' },
+                    yaxis: { title: 'Y' },
+                    zaxis: { title: 'Z' }
+                },
+                height: 600
+            };
+
+            Plotly.newPlot('plot3d', traces, layout);
+        }
+
+        // 3. 计算过程表格
+        function fillCalculationTable() {
+            const vec1 = [0.123, -0.456, 0.789, 0.234, -0.123];
+            const vec2 = [0.145, -0.423, 0.812, 0.267, -0.098];
+
+            const tbody = document.getElementById('calculation-table');
+            let sumSquaredDiff = 0;
+
+            for (let i = 0; i < 5; i++) {
+                const diff = vec1[i] - vec2[i];
+                const squaredDiff = diff * diff;
+                sumSquaredDiff += squaredDiff;
+
+                const row = `
+                    <tr>
+                        <td>${i}</td>
+                        <td>${vec1[i].toFixed(6)}</td>
+                        <td>${vec2[i].toFixed(6)}</td>
+                        <td>${diff.toFixed(6)}</td>
+                        <td>${squaredDiff.toFixed(6)}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            }
+
+            tbody.innerHTML += `
+                <tr style="background: #fffacd;">
+                    <td colspan="5">... (省略后续 763 个维度的计算) ...</td>
+                </tr>
+            `;
+
+            // 模拟完整768维的结果
+            const fullSumSquaredDiff = 12.345678;
+            const distance = Math.sqrt(fullSumSquaredDiff);
+
+            document.getElementById('full-calculation').innerHTML = `
+                • 差值平方和 Σ(Aᵢ - Bᵢ)² = ${fullSumSquaredDiff.toFixed(6)}<br>
+                • <span class="highlight">欧氏距离 = √${fullSumSquaredDiff.toFixed(6)} = ${distance.toFixed(6)}</span><br><br>
+
+                <strong>解读：</strong><br>
+                • 距离越小，两个向量越相似<br>
+                • 距离为 0 时，两个向量完全相同<br>
+                • 对于归一化向量，最大距离约为 √2 ≈ 1.414
+            `;
+        }
+
+        // 4. 距离矩阵热力图
+        function plotHeatmap() {
+            const sentences = [
+                '如何学习 Java 编程',
+                'Java 入门教程',
+                'Python 编程',
+                '今天天气真好',
+                'Elasticsearch 搜索'
+            ];
+
+            // 欧氏距离矩阵（距离越大，相似度越低）
+            const distanceMatrix = [
+                [0.000, 0.234, 0.678, 1.234, 0.543],
+                [0.234, 0.000, 0.712, 1.298, 0.598],
+                [0.678, 0.712, 0.000, 1.345, 0.789],
+                [1.234, 1.298, 1.345, 0.000, 1.156],
+                [0.543, 0.598, 0.789, 1.156, 0.000]
+            ];
+
+            const data = [{
+                z: distanceMatrix,
+                x: sentences,
+                y: sentences,
+                type: 'heatmap',
+                colorscale: 'Blues',
+                reversescale: true,
+                text: distanceMatrix.map(row => row.map(val => val.toFixed(3))),
+                texttemplate: '%{text}',
+                textfont: { size: 12 },
+                colorbar: {
+                    title: '距离',
+                    tickvals: [0, 0.5, 1.0, 1.5]
+                }
+            }];
+
+            const layout = {
+                title: '欧氏距离矩阵（热力图）',
+                xaxis: { tickangle: -45 },
+                yaxis: { tickangle: 0 },
+                height: 600,
+                annotations: [{
+                    text: '注：蓝色=距离小(相似), 红色=距离大(不相似)',
+                    showarrow: false,
+                    x: 0.5,
+                    y: -0.15,
+                    xref: 'paper',
+                    yref: 'paper',
+                    font: { size: 12, color: '#e74c3c' }
+                }]
+            };
+
+            Plotly.newPlot('heatmap', data, layout);
+        }
+
+        // 5. 欧氏距离 vs 余弦相似度对比
+        function plotComparison() {
+            // 同一方向，不同长度的向量
+            const vectors = [
+                { name: 'A (1, 1)', x: 1, y: 1, length: Math.sqrt(2) },
+                { name: 'B (2, 2)', x: 2, y: 2, length: Math.sqrt(8) },
+                { name: 'C (3, 3)', x: 3, y: 3, length: Math.sqrt(18) },
+                { name: 'D (1.5, 0.5)', x: 1.5, y: 0.5, length: Math.sqrt(2.5) }
+            ];
+
+            const traces = [];
+
+            // 绘制向量
+            vectors.forEach((vec, idx) => {
+                traces.push({
+                    x: [0, vec.x],
+                    y: [0, vec.y],
+                    mode: 'lines+markers+text',
+                    name: vec.name,
+                    text: ['', vec.name],
+                    textposition: 'top center',
+                    line: { width: 3 },
+                    marker: { size: 10 }
+                });
+            });
+
+            const layout = {
+                title: '欧氏距离 vs 余弦相似度：向量长度的影响',
+                xaxis: { title: 'X', range: [-0.5, 3.5], zeroline: true },
+                yaxis: { title: 'Y', range: [-0.5, 3.5], zeroline: true },
+                height: 500,
+                annotations: [
+                    {
+                        x: 2,
+                        y: 2.5,
+                        text: 'A, B, C 方向相同<br>余弦相似度 = 1.0<br>但欧氏距离不同！',
+                        showarrow: true,
+                        arrowhead: 2,
+                        ax: -80,
+                        ay: -50,
+                        bgcolor: '#fffacd',
+                        bordercolor: '#ffc107',
+                        borderwidth: 2
+                    },
+                    {
+                        x: 1.5,
+                        y: 0.5,
+                        text: 'D 方向不同<br>余弦相似度 < 1.0<br>欧氏距离也不同',
+                        showarrow: true,
+                        arrowhead: 2,
+                        ax: 50,
+                        ay: 50,
+                        bgcolor: '#ffe5e5',
+                        bordercolor: '#e74c3c',
+                        borderwidth: 2
+                    }
+                ]
+            };
+
+            Plotly.newPlot('comparison-plot', traces, layout);
+        }
+
+        // 6. 向量长度影响演示
+        function plotLengthEffect() {
+            const baseVector = { x: 1, y: 1 };
+            const scales = [0.5, 1, 1.5, 2, 2.5, 3];
+
+            const traces = [];
+
+            scales.forEach(scale => {
+                traces.push({
+                    x: [0, baseVector.x * scale],
+                    y: [0, baseVector.y * scale],
+                    mode: 'lines+markers',
+                    name: `长度 × ${scale}`,
+                    line: { width: 3 },
+                    marker: { size: 8 }
+                });
+            });
+
+            const layout = {
+                title: '相同方向、不同长度的向量',
+                xaxis: { title: 'X', range: [-0.5, 3.5], zeroline: true },
+                yaxis: { title: 'Y', range: [-0.5, 3.5], zeroline: true },
+                height: 500,
+                annotations: [{
+                    text: '所有向量方向相同 (45°)<br>余弦相似度都是 1.0<br>但欧氏距离各不相同',
+                    x: 2,
+                    y: 2.5,
+                    showarrow: false,
+                    bgcolor: '#d4edda',
+                    bordercolor: '#28a745',
+                    borderwidth: 2,
+                    font: { size: 14 }
+                }]
+            };
+
+            Plotly.newPlot('length-effect', traces, layout);
+        }
+
+        // 7. 归一化效果
+        function plotNormalizationEffect() {
+            // 原始向量
+            const original = [
+                { name: 'A 原始', x: 3, y: 4, normalized: false },
+                { name: 'B 原始', x: 6, y: 8, normalized: false }
+            ];
+
+            // 归一化后的向量
+            const normalized = [
+                { name: 'A 归一化', x: 0.6, y: 0.8, normalized: true },
+                { name: 'B 归一化', x: 0.6, y: 0.8, normalized: true }
+            ];
+
+            const traces = [];
+
+            // 原始向量
+            original.forEach(vec => {
+                traces.push({
+                    x: [0, vec.x],
+                    y: [0, vec.y],
+                    mode: 'lines+markers+text',
+                    name: vec.name,
+                    text: ['', vec.name],
+                    textposition: 'top center',
+                    line: { width: 3, dash: 'dash' },
+                    marker: { size: 10 }
+                });
+            });
+
+            // 归一化向量
+            normalized.forEach(vec => {
+                traces.push({
+                    x: [0, vec.x],
+                    y: [0, vec.y],
+                    mode: 'lines+markers+text',
+                    name: vec.name,
+                    text: ['', vec.name],
+                    textposition: 'bottom center',
+                    line: { width: 4 },
+                    marker: { size: 12 }
+                });
+            });
+
+            // 单位圆
+            const theta = [];
+            const circleX = [];
+            const circleY = [];
+            for (let i = 0; i <= 100; i++) {
+                const angle = (i / 100) * 2 * Math.PI;
+                theta.push(angle);
+                circleX.push(Math.cos(angle));
+                circleY.push(Math.sin(angle));
+            }
+
+            traces.push({
+                x: circleX,
+                y: circleY,
+                mode: 'lines',
+                name: '单位圆',
+                line: { color: 'gray', dash: 'dot', width: 1 },
+                showlegend: true
+            });
+
+            const layout = {
+                title: 'L2 归一化的效果',
+                xaxis: { title: 'X', range: [-1, 7], zeroline: true },
+                yaxis: { title: 'Y', range: [-1, 9], zeroline: true },
+                height: 600,
+                annotations: [
+                    {
+                        x: 4.5,
+                        y: 6,
+                        text: '原始向量：<br>d(A, B) = 5.0<br>(距离很大)',
+                        showarrow: true,
+                        arrowhead: 2,
+                        ax: -50,
+                        ay: -50,
+                        bgcolor: '#ffe5e5',
+                        bordercolor: '#e74c3c',
+                        borderwidth: 2
+                    },
+                    {
+                        x: 0.6,
+                        y: 0.8,
+                        text: '归一化后：<br>d(A, B) = 0.0<br>(完全重合)',
+                        showarrow: true,
+                        arrowhead: 2,
+                        ax: 80,
+                        ay: -50,
+                        bgcolor: '#d4edda',
+                        bordercolor: '#28a745',
+                        borderwidth: 2
+                    }
+                ]
+            };
+
+            Plotly.newPlot('normalization-effect', traces, layout);
+        }
+
+        // 初始化所有图表
+        window.onload = function() {
+            plot2D();
+            plot3D();
+            fillCalculationTable();
+            plotHeatmap();
+            plotComparison();
+            plotLengthEffect();
+            plotNormalizationEffect();
+        };
+    </script>
+</body>
+</html>
