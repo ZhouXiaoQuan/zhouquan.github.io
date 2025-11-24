@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>点积相似度可视化详解</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #9b59b6;
+            padding-bottom: 15px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 40px;
+            border-left: 5px solid #9b59b6;
+            padding-left: 15px;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .graph-container {
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+        }
+        .explanation {
+            background: #f3e5f5;
+            padding: 15px;
+            border-left: 4px solid #9b59b6;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .formula {
+            background: #fff3cd;
+            padding: 20px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .highlight {
+            color: #9b59b6;
+            font-weight: bold;
+        }
+        .highlight-red {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .highlight-green {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .comparison-table th, .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        .comparison-table th {
+            background-color: #9b59b6;
+            color: white;
+        }
+        .comparison-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .step-number {
+            display: inline-block;
+            background: #9b59b6;
+            color: white;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            margin-right: 10px;
+        }
+        .info-box {
+            background: #f3e5f5;
+            border: 1px solid #e1bee7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success-box {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .math-box {
+            background: white;
+            border: 2px solid #9b59b6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .three-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .column-box {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .column-box h4 {
+            margin-top: 0;
+            color: #9b59b6;
+        }
+        .positive { color: #27ae60; }
+        .negative { color: #e74c3c; }
+        .zero { color: #f39c12; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ 点积相似度（Dot Product）完整可视化</h1>
+
+        <div class="info-box">
+            <strong>📌 学习目标：</strong> 深入理解点积的计算原理、几何意义，以及它如何同时考虑向量的方向和长度。
+        </div>
+
+        <!-- Section 1: 点积的基本概念 -->
+        <h2><span class="step-number">1</span>点积的基本概念</h2>
+        <div class="section">
+            <div class="math-box">
+                <h3 style="color: #9b59b6; margin-top: 0;">数学定义</h3>
+                <div class="formula">
+                    <strong>代数定义：</strong><br>
+                    dot_product(A, B) = Σ(Aᵢ × Bᵢ)<br><br>
+
+                    展开形式：<br>
+                    A · B = A₀×B₀ + A₁×B₁ + A₂×B₂ + ... + A₇₆₇×B₇₆₇<br><br>
+
+                    <strong>几何定义：</strong><br>
+                    A · B = ||A|| × ||B|| × cos(θ)<br><br>
+
+                    其中：<br>
+                    • ||A|| = 向量 A 的长度（模长）<br>
+                    • ||B|| = 向量 B 的长度（模长）<br>
+                    • θ = 向量 A 和 B 之间的夹角
+                </div>
+            </div>
+
+            <div class="explanation">
+                <strong>核心特点：</strong>
+                <ul>
+                    <li>点积 = <span class="highlight">方向</span> × <span class="highlight">长度</span> 的综合度量</li>
+                    <li>值域：<strong>(-∞, +∞)</strong>，可正可负可为零</li>
+                    <li>计算效率最高（只需乘加运算，无需开方）</li>
+                    <li>正值 → 方向相近；负值 → 方向相反；零 → 垂直</li>
+                </ul>
+            </div>
+
+            <div class="three-column">
+                <div class="column-box" style="border-color: #27ae60;">
+                    <h4 class="positive">点积 > 0</h4>
+                    <p>向量方向相近<br>（夹角 < 90°）</p>
+                    <strong>相似</strong>
+                </div>
+                <div class="column-box" style="border-color: #f39c12;">
+                    <h4 class="zero">点积 = 0</h4>
+                    <p>向量正交<br>（夹角 = 90°）</p>
+                    <strong>无关</strong>
+                </div>
+                <div class="column-box" style="border-color: #e74c3c;">
+                    <h4 class="negative">点积 < 0</h4>
+                    <p>向量方向相反<br>（夹角 > 90°）</p>
+                    <strong>相反</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: 2D 空间中的点积 -->
+        <h2><span class="step-number">2</span>2D 空间几何理解</h2>
+        <div class="section">
+            <div class="explanation">
+                <strong>说明：</strong>点积可以理解为一个向量在另一个向量方向上的<span class="highlight">投影长度</span>乘以该向量的长度
+            </div>
+            <div class="graph-container" id="plot2d"></div>
+            <div class="math-box">
+                <h3 style="color: #9b59b6; margin-top: 0;">2D 示例计算</h3>
+                <div class="formula">
+                    向量 A = (3, 4)  ||A|| = 5<br>
+                    向量 B = (4, 3)  ||B|| = 5<br>
+                    向量 C = (-3, 4) ||C|| = 5<br><br>
+
+                    <strong class="positive">A · B = 3×4 + 4×3 = 12 + 12 = 24</strong> (正值，方向相近)<br>
+                    <strong class="zero">A · C = 3×(-3) + 4×4 = -9 + 16 = 7</strong> (正值，夹角小于90°)<br>
+                    <strong class="negative">B · C = 4×(-3) + 3×4 = -12 + 12 = 0</strong> (零，正交！)<br><br>
+
+                    几何验证：<br>
+                    A · B = ||A|| × ||B|| × cos(θ)<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 5 × 5 × cos(16.26°)<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 25 × 0.96<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;≈ 24 ✓
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: 点积的几何意义 - 投影 -->
+        <h2><span class="step-number">3</span>点积的几何意义：投影</h2>
+        <div class="section">
+            <div class="graph-container" id="projection-plot"></div>
+            <div class="explanation">
+                <strong>投影公式：</strong><br>
+                A · B = ||A|| × (B 在 A 方向上的投影长度)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= ||B|| × (A 在 B 方向上的投影长度)<br><br>
+                <strong>理解：</strong>点积衡量的是两个向量在同一方向上的"重合程度"
+            </div>
+        </div>
+
+        <!-- Section 4: 3D 空间可视化 -->
+        <h2><span class="step-number">4</span>3D 空间点积可视化</h2>
+        <div class="section">
+            <div class="graph-container" id="plot3d"></div>
+            <div class="math-box">
+                <h3 style="color: #9b59b6; margin-top: 0;">3D 示例计算</h3>
+                <div class="formula">
+                    向量 A = (1, 2, 3)<br>
+                    向量 B = (4, 5, 6)<br><br>
+
+                    A · B = 1×4 + 2×5 + 3×6<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 4 + 10 + 18<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="highlight">32</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5: 768 维向量的详细计算 -->
+        <h2><span class="step-number">5</span>768 维向量的点积计算</h2>
+        <div class="section">
+            <div class="explanation">
+                以 GTE 模型生成的 768 维向量为例，展示前 5 个维度的计算过程：
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>维度 i</th>
+                        <th>vec1[i]<br>(句子1)</th>
+                        <th>vec2[i]<br>(句子2)</th>
+                        <th>乘积<br>Aᵢ × Bᵢ</th>
+                        <th>累加和</th>
+                    </tr>
+                </thead>
+                <tbody id="calculation-table">
+                </tbody>
+            </table>
+
+            <div class="formula">
+                <strong>完整计算（768 维）：</strong><br>
+                <div id="full-calculation"></div>
+            </div>
+        </div>
+
+        <!-- Section 6: Java 代码实现 -->
+        <h2><span class="step-number">6</span>Java 代码实现</h2>
+        <div class="section">
+            <div class="code-block">
+<pre style="margin: 0; color: #f8f8f2;">
+<span style="color: #75715e;">/**
+ * 计算点积（内积）
+ *
+ * @param vec1 向量1 (768维)
+ * @param vec2 向量2 (768维)
+ * @return 点积值 (范围: (-∞, +∞))
+ */</span>
+<span style="color: #66d9ef;">public static double</span> <span style="color: #a6e22e;">dotProduct</span>(<span style="color: #66d9ef;">float</span>[] vec1, <span style="color: #66d9ef;">float</span>[] vec2) {
+    <span style="color: #f92672;">if</span> (vec1.length != vec2.length) {
+        <span style="color: #f92672;">throw new</span> <span style="color: #a6e22e;">IllegalArgumentException</span>(<span style="color: #e6db74;">"向量维度不匹配"</span>);
+    }
+
+    <span style="color: #66d9ef;">double</span> result = <span style="color: #ae81ff;">0.0</span>;
+
+    <span style="color: #75715e;">// 遍历所有维度（768维）- 最简单高效的计算</span>
+    <span style="color: #f92672;">for</span> (<span style="color: #66d9ef;">int</span> i = <span style="color: #ae81ff;">0</span>; i &lt; vec1.length; i++) {
+        result += vec1[i] * vec2[i];  <span style="color: #75715e;">// 只需乘法和加法</span>
+    }
+
+    <span style="color: #f92672;">return</span> result;
+}
+
+<span style="color: #75715e;">/**
+ * 点积与余弦相似度的关系
+ * cosine = dotProduct / (||A|| × ||B||)
+ */</span>
+<span style="color: #66d9ef;">public static double</span> <span style="color: #a6e22e;">cosineSimilarityFromDotProduct</span>(<span style="color: #66d9ef;">float</span>[] vec1, <span style="color: #66d9ef;">float</span>[] vec2) {
+    <span style="color: #66d9ef;">double</span> dot = dotProduct(vec1, vec2);
+    <span style="color: #66d9ef;">double</span> norm1 = Math.<span style="color: #a6e22e;">sqrt</span>(dotProduct(vec1, vec1));  <span style="color: #75715e;">// ||A|| = √(A·A)</span>
+    <span style="color: #66d9ef;">double</span> norm2 = Math.<span style="color: #a6e22e;">sqrt</span>(dotProduct(vec2, vec2));  <span style="color: #75715e;">// ||B|| = √(B·B)</span>
+
+    <span style="color: #f92672;">return</span> dot / (norm1 * norm2);
+}
+
+<span style="color: #75715e;">/**
+ * 对于归一化向量，点积就等于余弦相似度
+ * 因为 ||A|| = ||B|| = 1
+ */</span>
+<span style="color: #66d9ef;">public static double</span> <span style="color: #a6e22e;">dotProductNormalized</span>(<span style="color: #66d9ef;">float</span>[] vec1, <span style="color: #66d9ef;">float</span>[] vec2) {
+    <span style="color: #75715e;">// 假设向量已经归一化</span>
+    <span style="color: #75715e;">// 此时 dot(A, B) = ||A|| × ||B|| × cos(θ) = 1 × 1 × cos(θ) = cos(θ)</span>
+    <span style="color: #f92672;">return</span> dotProduct(vec1, vec2);
+}
+
+<span style="color: #75715e;">/**
+ * 使用 SIMD 优化的点积（性能优化版本）
+ * 实际生产中可以使用 Java Vector API (JDK 16+)
+ */</span>
+<span style="color: #66d9ef;">public static double</span> <span style="color: #a6e22e;">dotProductOptimized</span>(<span style="color: #66d9ef;">float</span>[] vec1, <span style="color: #66d9ef;">float</span>[] vec2) {
+    <span style="color: #66d9ef;">double</span> sum0 = <span style="color: #ae81ff;">0</span>, sum1 = <span style="color: #ae81ff;">0</span>, sum2 = <span style="color: #ae81ff;">0</span>, sum3 = <span style="color: #ae81ff;">0</span>;  <span style="color: #75715e;">// 4路并行累加</span>
+
+    <span style="color: #66d9ef;">int</span> i = <span style="color: #ae81ff;">0</span>;
+    <span style="color: #66d9ef;">int</span> limit = vec1.length - <span style="color: #ae81ff;">3</span>;
+
+    <span style="color: #75715e;">// 循环展开，利用 CPU 流水线</span>
+    <span style="color: #f92672;">for</span> (; i &lt; limit; i += <span style="color: #ae81ff;">4</span>) {
+        sum0 += vec1[i] * vec2[i];
+        sum1 += vec1[i+<span style="color: #ae81ff;">1</span>] * vec2[i+<span style="color: #ae81ff;">1</span>];
+        sum2 += vec1[i+<span style="color: #ae81ff;">2</span>] * vec2[i+<span style="color: #ae81ff;">2</span>];
+        sum3 += vec1[i+<span style="color: #ae81ff;">3</span>] * vec2[i+<span style="color: #ae81ff;">3</span>];
+    }
+
+    <span style="color: #75715e;">// 处理剩余元素</span>
+    <span style="color: #f92672;">for</span> (; i &lt; vec1.length; i++) {
+        sum0 += vec1[i] * vec2[i];
+    }
+
+    <span style="color: #f92672;">return</span> sum0 + sum1 + sum2 + sum3;
+}
+</pre>
+            </div>
+        </div>
+
+        <!-- Section 7: 点积值热力图 -->
+        <h2><span class="step-number">7</span>点积矩阵热力图</h2>
+        <div class="section">
+            <div class="explanation">
+                <strong>说明：</strong>计算所有句子两两之间的点积值。注意点积可以是负数！
+            </div>
+            <div class="graph-container" id="heatmap"></div>
+            <div class="explanation">
+                <strong>热力图解读：</strong>
+                <ul>
+                    <li>颜色越<span style="color: #d73027; font-weight: bold;">红</span>，点积越大（方向相近且/或长度大）</li>
+                    <li>颜色越<span style="color: #4575b4; font-weight: bold;">蓝</span>，点积越小或为负（方向相反或正交）</li>
+                    <li>对角线值通常最大（自己与自己的点积 = ||A||²）</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 8: 点积 vs 余弦相似度 vs 欧氏距离 -->
+        <h2><span class="step-number">8</span>三种度量方式对比</h2>
+        <div class="section">
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>对比维度</th>
+                        <th>点积 (Dot Product)</th>
+                        <th>余弦相似度 (Cosine)</th>
+                        <th>欧氏距离 (Euclidean)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>公式</strong></td>
+                        <td>Σ(Aᵢ × Bᵢ)</td>
+                        <td>(A · B) / (||A|| × ||B||)</td>
+                        <td>√(Σ(Aᵢ - Bᵢ)²)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>值域</strong></td>
+                        <td class="highlight">(-∞, +∞)</td>
+                        <td>[-1, 1]</td>
+                        <td>[0, +∞)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>考虑因素</strong></td>
+                        <td class="highlight">方向 + 长度</td>
+                        <td>仅方向</td>
+                        <td>绝对位置差异</td>
+                    </tr>
+                    <tr>
+                        <td><strong>计算复杂度</strong></td>
+                        <td class="highlight-green">O(n) - 最简单</td>
+                        <td>O(n) - 需要额外计算模长</td>
+                        <td>O(n) - 需要开方</td>
+                    </tr>
+                    <tr>
+                        <td><strong>归一化向量</strong></td>
+                        <td>点积 = 余弦相似度</td>
+                        <td>与点积相同</td>
+                        <td>d² = 2 - 2×cosine</td>
+                    </tr>
+                    <tr>
+                        <td><strong>优点</strong></td>
+                        <td>• 计算最快<br>• 同时考虑方向和长度<br>• 适合推荐系统</td>
+                        <td>• 不受长度影响<br>• 值域有界<br>• 适合文本检索</td>
+                        <td>• 直观易懂<br>• 绝对距离<br>• 适合聚类</td>
+                    </tr>
+                    <tr>
+                        <td><strong>缺点</strong></td>
+                        <td>• 值域无界<br>• 受长度影响大<br>• 不同量纲难比较</td>
+                        <td>• 忽略向量大小<br>• 计算稍慢</td>
+                        <td>• 受长度影响<br>• 维度诅咒</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ES 配置</strong></td>
+                        <td>similarity: "dot_product"</td>
+                        <td>similarity: "cosine"</td>
+                        <td>similarity: "l2_norm"</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 9: 点积的特殊性质 -->
+        <h2><span class="step-number">9</span>点积的重要性质</h2>
+        <div class="section">
+            <div class="graph-container" id="properties-plot"></div>
+
+            <div class="math-box">
+                <h3 style="color: #9b59b6; margin-top: 0;">关键性质</h3>
+                <div class="formula">
+                    <strong>1. 自身点积 = 模长平方</strong><br>
+                    A · A = ||A||²<br><br>
+
+                    <strong>2. 交换律</strong><br>
+                    A · B = B · A<br><br>
+
+                    <strong>3. 分配律</strong><br>
+                    A · (B + C) = A · B + A · C<br><br>
+
+                    <strong>4. 与余弦相似度的关系</strong><br>
+                    cos(θ) = (A · B) / (||A|| × ||B||)<br><br>
+
+                    <strong>5. 归一化向量的特殊性</strong><br>
+                    若 ||A|| = ||B|| = 1，则：<br>
+                    A · B = cos(θ) ∈ [-1, 1]
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 10: 何时使用点积 -->
+        <h2><span class="step-number">10</span>点积的应用场景</h2>
+        <div class="section">
+            <div class="graph-container" id="use-cases"></div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>场景</th>
+                        <th>推荐度量</th>
+                        <th>原因</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>推荐系统（用户-物品）</td>
+                        <td class="highlight">✅ 点积</td>
+                        <td>用户偏好强度和物品特征强度都重要</td>
+                    </tr>
+                    <tr>
+                        <td>归一化后的语义检索</td>
+                        <td class="highlight">✅ 点积</td>
+                        <td>等价于余弦相似度，但计算更快</td>
+                    </tr>
+                    <tr>
+                        <td>Maximum Inner Product Search (MIPS)</td>
+                        <td class="highlight">✅ 点积</td>
+                        <td>专门针对点积优化的检索算法</td>
+                    </tr>
+                    <tr>
+                        <td>注意力机制 (Attention)</td>
+                        <td class="highlight">✅ 点积</td>
+                        <td>Transformer 中 Q·K 使用点积</td>
+                    </tr>
+                    <tr>
+                        <td>文本语义检索（未归一化）</td>
+                        <td>✅ 余弦相似度</td>
+                        <td>文档长度不应影响相似度</td>
+                    </tr>
+                    <tr>
+                        <td>聚类分析</td>
+                        <td>✅ 欧氏距离</td>
+                        <td>需要绝对距离度量</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="success-box">
+                <strong>💡 最佳实践：</strong>
+                <ol>
+                    <li><strong>高性能场景：</strong>先归一化向量，然后使用点积（等价于余弦，但更快）</li>
+                    <li><strong>推荐系统：</strong>直接使用点积，因为向量大小有意义</li>
+                    <li><strong>文本检索：</strong>如果向量未归一化，用余弦相似度；已归一化用点积</li>
+                    <li><strong>Elasticsearch：</strong>对于归一化向量，使用 <code>dot_product</code> 比 <code>cosine</code> 更快</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Section 11: Elasticsearch 中的使用 -->
+        <h2><span class="step-number">11</span>在 Elasticsearch 中使用点积</h2>
+        <div class="section">
+            <div class="warning-box">
+                <strong>⚠️ 重要提示：</strong>
+                在 Elasticsearch 中使用 <code>dot_product</code> 时，<strong>必须先将向量归一化</strong>！
+                否则点积值可能超出预期范围，影响评分。
+            </div>
+
+            <div class="code-block">
+<pre style="margin: 0; color: #f8f8f2;">
+<span style="color: #75715e;">// 1. 创建索引时指定 similarity 为 dot_product</span>
+PUT /my_index
+{
+  <span style="color: #e6db74;">"mappings"</span>: {
+    <span style="color: #e6db74;">"properties"</span>: {
+      <span style="color: #e6db74;">"title_vector"</span>: {
+        <span style="color: #e6db74;">"type"</span>: <span style="color: #e6db74;">"dense_vector"</span>,
+        <span style="color: #e6db74;">"dims"</span>: <span style="color: #ae81ff;">768</span>,
+        <span style="color: #e6db74;">"index"</span>: <span style="color: #ae81ff;">true</span>,
+        <span style="color: #e6db74;">"similarity"</span>: <span style="color: #e6db74;">"dot_product"</span>  <span style="color: #75715e;">← 使用点积</span>
+      }
+    }
+  }
+}
+
+<span style="color: #75715e;">// 2. 索引文档时，必须使用归一化的向量！</span>
+POST /my_index/_doc
+{
+  <span style="color: #e6db74;">"title"</span>: <span style="color: #e6db74;">"Java 教程"</span>,
+  <span style="color: #e6db74;">"title_vector"</span>: [<span style="color: #ae81ff;">0.1</span>, <span style="color: #ae81ff;">0.2</span>, ...]  <span style="color: #75715e;">// 归一化后的 768 维向量</span>
+}
+
+<span style="color: #75715e;">// 3. kNN 搜索</span>
+POST /my_index/_search
+{
+  <span style="color: #e6db74;">"knn"</span>: {
+    <span style="color: #e6db74;">"field"</span>: <span style="color: #e6db74;">"title_vector"</span>,
+    <span style="color: #e6db74;">"query_vector"</span>: [<span style="color: #ae81ff;">0.1</span>, <span style="color: #ae81ff;">0.2</span>, ...],  <span style="color: #75715e;">// 同样需要归一化！</span>
+    <span style="color: #e6db74;">"k"</span>: <span style="color: #ae81ff;">10</span>,
+    <span style="color: #e6db74;">"num_candidates"</span>: <span style="color: #ae81ff;">100</span>
+  }
+}
+
+<span style="color: #75715e;">// Elasticsearch 的评分转换：</span>
+<span style="color: #75715e;">// 对于归一化向量，点积范围是 [-1, 1]</span>
+<span style="color: #75715e;">// ES 将其转换为：score = (1 + dot_product) / 2</span>
+<span style="color: #75715e;">// 这样评分范围变成 [0, 1]</span>
+</pre>
+            </div>
+
+            <div class="explanation">
+                <strong>性能对比（归一化向量）：</strong>
+                <table class="comparison-table" style="width: 80%; margin: 20px auto;">
+                    <tr>
+                        <th>度量方式</th>
+                        <th>计算操作</th>
+                        <th>相对速度</th>
+                    </tr>
+                    <tr>
+                        <td>dot_product</td>
+                        <td>n 次乘法 + (n-1) 次加法</td>
+                        <td class="highlight-green">⚡ 最快</td>
+                    </tr>
+                    <tr>
+                        <td>cosine</td>
+                        <td>3n 次乘法 + 3(n-1) 次加法 + 2 次开方 + 1 次除法</td>
+                        <td>中等</td>
+                    </tr>
+                    <tr>
+                        <td>l2_norm</td>
+                        <td>n 次减法 + n 次乘法 + (n-1) 次加法 + 1 次开方</td>
+                        <td>中等</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 12: 总结 -->
+        <h2><span class="step-number">12</span>总结：三种度量的关系</h2>
+        <div class="section">
+            <div class="graph-container" id="relationship-plot"></div>
+
+            <div class="math-box">
+                <h3 style="color: #9b59b6; margin-top: 0;">数学关系总结</h3>
+                <div class="formula">
+                    <strong>对于任意向量：</strong><br>
+                    cos(θ) = (A · B) / (||A|| × ||B||)<br><br>
+
+                    <strong>对于归一化向量（||A|| = ||B|| = 1）：</strong><br>
+                    A · B = cos(θ)<br>
+                    d²(A, B) = ||A||² + ||B||² - 2(A · B) = 2 - 2cos(θ)<br><br>
+
+                    <strong>结论：</strong><br>
+                    归一化后，三种度量本质上是等价的，只是表达形式不同！<br>
+                    • 点积：[-1, 1]，越大越相似<br>
+                    • 余弦：[-1, 1]，越大越相似<br>
+                    • 欧氏距离：[0, √2]，越小越相似
+                </div>
+            </div>
+
+            <div class="success-box">
+                <strong>🎯 最终建议：</strong>
+                <ol>
+                    <li><strong>始终对向量进行 L2 归一化</strong></li>
+                    <li>归一化后，优先使用 <code>dot_product</code>，计算最快</li>
+                    <li>如果向量未归一化且不想归一化，使用 <code>cosine</code></li>
+                    <li>需要绝对距离度量时，使用 <code>l2_norm</code></li>
+                </ol>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 1. 2D 点积可视化
+        function plot2D() {
+            const vectors = [
+                { name: 'A (3, 4)', x: 3, y: 4, color: '#2ecc71' },
+                { name: 'B (4, 3)', x: 4, y: 3, color: '#3498db' },
+                { name: 'C (-3, 4)', x: -3, y: 4, color: '#e74c3c' }
+            ];
+
+            const traces = [];
+
+            // 绘制向量
+            vectors.forEach(vec => {
+                traces.push({
+                    x: [0, vec.x],
+                    y: [0, vec.y],
+                    mode: 'lines+markers+text',
+                    name: vec.name,
+                    text: ['', vec.name],
+                    textposition: 'top center',
+                    line: { color: vec.color, width: 3 },
+                    marker: { size: 10 }
+                });
+            });
+
+            const layout = {
+                title: '2D 空间中的点积',
+                xaxis: { title: 'X', range: [-5, 6], zeroline: true },
+                yaxis: { title: 'Y', range: [-1, 6], zeroline: true },
+                height: 500,
+                annotations: [
+                    {
+                        x: 3.5,
+                        y: 3.5,
+                        text: 'A·B = 24<br>(方向相近)',
+                        showarrow: true,
+                        arrowhead: 2,
+                        ax: 40,
+                        ay: -40,
+                        bgcolor: '#d4edda',
+                        font: { color: '#27ae60' }
+                    },
+                    {
+                        x: 0,
+                        y: 4,
+                        text: 'B·C = 0<br>(正交！)',
+                        showarrow: true,
+                        arrowhead: 2,
+                        ax: 0,
+                        ay: -50,
+                        bgcolor: '#fff3cd',
+                        font: { color: '#f39c12' }
+                    }
+                ]
+            };
+
+            Plotly.newPlot('plot2d', traces, layout);
+        }
+
+        // 2. 投影可视化
+        function plotProjection() {
+            const A = { x: 4, y: 3 };
+            const B = { x: 5, y: 1 };
+
+            // B 在 A 方向上的投影
+            const dotAB = A.x * B.x + A.y * B.y;
+            const normA = Math.sqrt(A.x * A.x + A.y * A.y);
+            const projLength = dotAB / normA;
+            const projX = (A.x / normA) * projLength;
+            const projY = (A.y / normA) * projLength;
+
+            const traces = [
+                // 向量 A
+                {
+                    x: [0, A.x],
+                    y: [0, A.y],
+                    mode: 'lines+markers+text',
+                    name: 'A (4, 3)',
+                    text: ['', 'A'],
+                    line: { color: '#2ecc71', width: 4 },
+                    marker: { size: 10 }
+                },
+                // 向量 B
+                {
+                    x: [0, B.x],
+                    y: [0, B.y],
+                    mode: 'lines+markers+text',
+                    name: 'B (5, 1)',
+                    text: ['', 'B'],
+                    line: { color: '#3498db', width: 4 },
+                    marker: { size: 10 }
+                },
+                // 投影点
+                {
+                    x: [projX],
+                    y: [projY],
+                    mode: 'markers+text',
+                    name: '投影点',
+                    text: ['投影'],
+                    textposition: 'bottom center',
+                    marker: { size: 12, color: '#9b59b6', symbol: 'diamond' }
+                },
+                // 投影线（从 B 到投影点）
+                {
+                    x: [B.x, projX],
+                    y: [B.y, projY],
+                    mode: 'lines',
+                    name: '投影线',
+                    line: { color: '#9b59b6', width: 2, dash: 'dash' }
+                },
+                // 从原点到投影点
+                {
+                    x: [0, projX],
+                    y: [0, projY],
+                    mode: 'lines',
+                    name: '投影向量',
+                    line: { color: '#f39c12', width: 3 }
+                }
+            ];
+
+            const layout = {
+                title: '点积的几何意义：B 在 A 方向上的投影',
+                xaxis: { title: 'X', range: [-1, 6], zeroline: true },
+                yaxis: { title: 'Y', range: [-1, 4], zeroline: true },
+                height: 500,
+                annotations: [
+                    {
+                        x: projX / 2,
+                        y: projY / 2,
+                        text: `投影长度 = ${projLength.toFixed(2)}`,
+                        showarrow: false,
+                        bgcolor: '#fff3cd',
+                        font: { size: 12 }
+                    },
+                    {
+                        x: 3,
+                        y: 3.5,
+                        text: `A·B = ${dotAB}<br>= ||A|| × 投影长度<br>= ${normA.toFixed(2)} × ${projLength.toFixed(2)}`,
+                        showarrow: false,
+                        bgcolor: '#f3e5f5',
+                        font: { size: 12 }
+                    }
+                ]
+            };
+
+            Plotly.newPlot('projection-plot', traces, layout);
+        }
+
+        // 3. 3D 点积可视化
+        function plot3D() {
+            const vectors = [
+                { name: 'A (1, 2, 3)', x: 1, y: 2, z: 3, color: '#2ecc71' },
+                { name: 'B (4, 5, 6)', x: 4, y: 5, z: 6, color: '#3498db' }
+            ];
+
+            const traces = [];
+
+            vectors.forEach(vec => {
+                traces.push({
+                    x: [0, vec.x],
+                    y: [0, vec.y],
+                    z: [0, vec.z],
+                    mode: 'lines+markers+text',
+                    type: 'scatter3d',
+                    name: vec.name,
+                    text: ['', vec.name],
+                    line: { color: vec.color, width: 6 },
+                    marker: { size: 8 }
+                });
+            });
+
+            const layout = {
+                title: '3D 空间点积：A·B = 32',
+                scene: {
+                    xaxis: { title: 'X' },
+                    yaxis: { title: 'Y' },
+                    zaxis: { title: 'Z' }
+                },
+                height: 600
+            };
+
+            Plotly.newPlot('plot3d', traces, layout);
+        }
+
+        // 4. 计算过程表格
+        function fillCalculationTable() {
+            const vec1 = [0.123, -0.456, 0.789, 0.234, -0.123];
+            const vec2 = [0.145, -0.423, 0.812, 0.267, -0.098];
+
+            const tbody = document.getElementById('calculation-table');
+            let sum = 0;
+
+            for (let i = 0; i < 5; i++) {
+                const product = vec1[i] * vec2[i];
+                sum += product;
+
+                const row = `
+                    <tr>
+                        <td>${i}</td>
+                        <td>${vec1[i].toFixed(6)}</td>
+                        <td>${vec2[i].toFixed(6)}</td>
+                        <td>${product.toFixed(6)}</td>
+                        <td>${sum.toFixed(6)}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            }
+
+            tbody.innerHTML += `
+                <tr style="background: #fffacd;">
+                    <td colspan="5">... (省略后续 763 个维度的计算) ...</td>
+                </tr>
+            `;
+
+            // 模拟完整768维的结果
+            const fullDotProduct = 245.671234;
+
+            document.getElementById('full-calculation').innerHTML = `
+                • 累加所有 768 个维度的乘积<br>
+                • <span class="highlight">点积 = ${fullDotProduct.toFixed(6)}</span><br><br>
+
+                <strong>解读：</strong><br>
+                • 点积 > 0：两个向量方向相近（夹角 < 90°）<br>
+                • 点积 = 0：两个向量正交（夹角 = 90°）<br>
+                • 点积 < 0：两个向量方向相反（夹角 > 90°）<br><br>
+
+                <strong>与余弦相似度的关系：</strong><br>
+                cosine = ${fullDotProduct.toFixed(2)} / (||A|| × ||B||)
+            `;
+        }
+
+        // 5. 点积矩阵热力图
+        function plotHeatmap() {
+            const sentences = [
+                '如何学习 Java 编程',
+                'Java 入门教程',
+                'Python 编程',
+                '今天天气真好',
+                'Elasticsearch 搜索'
+            ];
+
+            // 点积矩阵（未归一化，值可能较大）
+            const dotProductMatrix = [
+                [156.23, 134.56, 89.34, 12.45, 98.76],
+                [134.56, 148.92, 78.23, 8.67, 87.34],
+                [89.34, 78.23, 142.56, 5.23, 76.89],
+                [12.45, 8.67, 5.23, 138.45, 15.67],
+                [98.76, 87.34, 76.89, 15.67, 145.23]
+            ];
+
+            const data = [{
+                z: dotProductMatrix,
+                x: sentences,
+                y: sentences,
+                type: 'heatmap',
+                colorscale: 'RdYlBu',
+                reversescale: true,
+                text: dotProductMatrix.map(row => row.map(val => val.toFixed(2))),
+                texttemplate: '%{text}',
+                textfont: { size: 10 },
+                colorbar: {
+                    title: '点积值'
+                }
+            }];
+
+            const layout = {
+                title: '点积矩阵（热力图）- 对角线值最大',
+                xaxis: { tickangle: -45 },
+                yaxis: { tickangle: 0 },
+                height: 600
+            };
+
+            Plotly.newPlot('heatmap', data, layout);
+        }
+
+        // 6. 点积性质可视化
+        function plotProperties() {
+            // 展示不同夹角的点积值
+            const angles = [];
+            const dotProducts = [];
+            const cosines = [];
+
+            for (let theta = 0; theta <= 180; theta += 5) {
+                angles.push(theta);
+                // 假设两个单位向量
+                const cos = Math.cos(theta * Math.PI / 180);
+                cosines.push(cos);
+                dotProducts.push(cos); // 对于单位向量，点积 = cos
+            }
+
+            const trace1 = {
+                x: angles,
+                y: dotProducts,
+                mode: 'lines',
+                name: '点积 (单位向量)',
+                line: { color: '#9b59b6', width: 3 }
+            };
+
+            // 标注关键点
+            const keyPoints = {
+                x: [0, 90, 180],
+                y: [1, 0, -1],
+                mode: 'markers+text',
+                name: '关键点',
+                text: ['最大值 1<br>(方向相同)', '零<br>(正交)', '最小值 -1<br>(方向相反)'],
+                textposition: ['top center', 'top center', 'bottom center'],
+                marker: { size: 12, color: '#e74c3c' }
+            };
+
+            const layout = {
+                title: '点积随夹角变化（单位向量）',
+                xaxis: { title: '夹角 θ (度)', range: [0, 180] },
+                yaxis: { title: '点积值', range: [-1.3, 1.3] },
+                height: 500,
+                shapes: [
+                    { type: 'line', x0: 0, x1: 180, y0: 0, y1: 0,
+                      line: { dash: 'dash', color: 'gray' } }
+                ]
+            };
+
+            Plotly.newPlot('properties-plot', [trace1, keyPoints], layout);
+        }
+
+        // 7. 应用场景图
+        function plotUseCases() {
+            const data = [{
+                type: 'pie',
+                values: [30, 25, 20, 15, 10],
+                labels: [
+                    '推荐系统',
+                    '注意力机制',
+                    'MIPS 检索',
+                    '归一化后语义检索',
+                    '其他'
+                ],
+                marker: {
+                    colors: ['#9b59b6', '#3498db', '#2ecc71', '#f39c12', '#95a5a6']
+                },
+                textinfo: 'label+percent',
+                hole: 0.4
+            }];
+
+            const layout = {
+                title: '点积的主要应用场景',
+                height: 500,
+                annotations: [{
+                    text: '点积',
+                    x: 0.5,
+                    y: 0.5,
+                    font: { size: 20, color: '#9b59b6' },
+                    showarrow: false
+                }]
+            };
+
+            Plotly.newPlot('use-cases', data, layout);
+        }
+
+        // 8. 三种度量关系图
+        function plotRelationship() {
+            // 展示归一化向量上三种度量的关系
+            const angles = [];
+            const dotProducts = [];
+            const euclideans = [];
+
+            for (let theta = 0; theta <= 180; theta += 2) {
+                angles.push(theta);
+                const cos = Math.cos(theta * Math.PI / 180);
+                dotProducts.push(cos);
+                // 归一化向量的欧氏距离：d = sqrt(2 - 2cos)
+                euclideans.push(Math.sqrt(2 - 2 * cos));
+            }
+
+            const traces = [
+                {
+                    x: angles,
+                    y: dotProducts,
+                    mode: 'lines',
+                    name: '点积/余弦相似度',
+                    line: { color: '#9b59b6', width: 3 },
+                    yaxis: 'y1'
+                },
+                {
+                    x: angles,
+                    y: euclideans,
+                    mode: 'lines',
+                    name: '欧氏距离',
+                    line: { color: '#e74c3c', width: 3 },
+                    yaxis: 'y2'
+                }
+            ];
+
+            const layout = {
+                title: '归一化向量：三种度量的关系',
+                xaxis: { title: '夹角 θ (度)' },
+                yaxis: {
+                    title: '点积/余弦',
+                    titlefont: { color: '#9b59b6' },
+                    tickfont: { color: '#9b59b6' },
+                    range: [-1.2, 1.2]
+                },
+                yaxis2: {
+                    title: '欧氏距离',
+                    titlefont: { color: '#e74c3c' },
+                    tickfont: { color: '#e74c3c' },
+                    overlaying: 'y',
+                    side: 'right',
+                    range: [0, 1.6]
+                },
+                height: 500,
+                legend: { x: 0.7, y: 0.9 }
+            };
+
+            Plotly.newPlot('relationship-plot', traces, layout);
+        }
+
+        // 初始化所有图表
+        window.onload = function() {
+            plot2D();
+            plotProjection();
+            plot3D();
+            fillCalculationTable();
+            plotHeatmap();
+            plotProperties();
+            plotUseCases();
+            plotRelationship();
+        };
+    </script>
+</body>
+</html>
